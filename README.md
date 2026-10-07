@@ -149,4 +149,4 @@ Built against Forge Neo `neo` branch, commit `534e6ecce1039dbe5647e2c391b84a75aa
 
 ## License
 
-AGPL-3.0, like Forge Neo and sd-forge-krea2-control (see [LICENSE](LICENSE)). Model weights keep their own licenses: Anima is CircleStone Labs' non-commercial license; the Pose adapter's weights are non-commercial; the Canny LoRA's license is not stated. Images you generate are not restricted by this extension's license.
+Copyright (c) 2026 matkaparka. AGPL-3.0, like Forge Neo and sd-forge-krea2-control (see [LICENSE](LICENSE)). Model weights keep their own licenses: Anima is CircleStone Labs' non-commercial license; the Pose adapter's weights are non-commercial; the Canny LoRA's license is not stated. Images you generate are not restricted by this extension's license.

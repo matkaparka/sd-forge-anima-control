@@ -149,4 +149,4 @@ set ANIMA_POSE_FILE=path\to\anima_pose_preview2.safetensors
 
 ## 许可
 
-AGPL-3.0，和 Forge Neo、sd-forge-krea2-control 一致（见 [LICENSE](LICENSE)）。模型权重遵循各自的许可：Anima 是 CircleStone Labs 的非商用许可；Pose 适配器权重为非商用；Canny LoRA 没有标明许可。你生成的图片不受本扩展许可限制。
+Copyright (c) 2026 matkaparka。以 AGPL-3.0 发布，和 Forge Neo、sd-forge-krea2-control 一致（见 [LICENSE](LICENSE)）。模型权重遵循各自的许可：Anima 是 CircleStone Labs 的非商用许可；Pose 适配器权重为非商用；Canny LoRA 没有标明许可。你生成的图片不受本扩展许可限制。
