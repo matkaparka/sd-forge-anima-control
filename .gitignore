@@ -1,0 +1,11 @@
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.venv/
+*.safetensors
+*.onnx
+.DS_Store
+Thumbs.db
+
+# local notes (not published)
+docs/local-*
