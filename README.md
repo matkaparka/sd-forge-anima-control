@@ -4,7 +4,7 @@ Control-LoRA support for **Anima** in [Forge Neo](https://github.com/Haoming02/s
 
 [中文说明](README_zh.md)
 
-> **Status: lightly tested on a GPU.** On an RTX 5070 Ti laptop with Forge Neo `neo 2.29` and the checkpoint `indigoFurryMixAnima_v10`, both controls armed correctly with no errors, and the Canny reference made each step about 2.2x slower until Control End dropped it, as designed. Image quality has not been evaluated across setups. Everything that can be checked without a GPU has been (see [Verification](#verification)); [docs/verification.md](docs/verification.md) lists the real-machine steps. Please report how real generations look.
+> **Status: lightly tested on a GPU.** On an RTX 5070 Ti laptop with Forge Neo `neo 2.29` and the checkpoint `indigoFurryMixAnima_v10`, both controls armed correctly with no errors, and the Canny reference made each step about 2.2x slower until Control End dropped it, as designed. Both controls ticked at once has also been run on a GPU and works. Image quality has not been evaluated across checkpoints, LoRA weights and settings. Everything that can be checked without a GPU has been (see [Verification](#verification)); [docs/verification.md](docs/verification.md) lists the real-machine steps. Please report how real generations look.
 >
 > **Tip, Canny with line drawings:** like any Canny control, it expects edges extracted from a picture. A black-and-white line drawing as the reference usually goes badly: Canny turns every line into a hollow double outline, or the model copies the drawing and the result stays uncolored. Use a photo or a colored illustration as the reference, or see *Invert Canny Map* below.
 
@@ -19,7 +19,7 @@ Anima has no real ControlNet. Both adapters are "control LoRAs", and they put th
 | **Canny** | levzzz's [anima-preview-canny-v0.2](https://civitai.com/models/2443202) | The edge map is VAE-encoded (`process_in`, sampler space) and appended as a **reference latent** along the T axis (like Flux.2 ReferenceLatent). The reference uses the same timestep as the target ("current t"). Forge's own reference code in `backend/nn/anima.py` does the concatenation; this extension supplies the latent. This is the same thing ComfyUI PR [#13392](https://github.com/Comfy-Org/ComfyUI/pull/13392) does (`torch.cat` on dim 2, `process_latent_in` on the references). |
 | **OpenPose** | Claquasse's [Anima-Control-Pose](https://huggingface.co/Claquasse/Anima-Control-Pose) Preview-2 | The skeleton is VAE-encoded (raw latent), run through the adapter's trained linear *control embedder* and **added to the output of the DiT's patch embedding**. The sequence length does not change. The same file is both the LoRA and the embedder. |
 
-**Tick one, or both.** The two paths do not interfere with each other mechanically: the reference frame is appended after the target, and the control tokens are added to the target frame only. Both LoRAs are added to the prompt and need to be two different files. Whether two separately trained adapters work well *together* is not covered by either adapter's author and has not been tested on a GPU; start with lower LoRA weights.
+**Tick one, or both.** The two paths do not interfere with each other mechanically: the reference frame is appended after the target, and the control tokens are added to the target frame only. Both LoRAs are added to the prompt and need to be two different files. Neither adapter's author trained or tested the two together; running both at once has been tried on a GPU and works. If they fight each other, lower the LoRA weights.
 
 OpenPose was merged in from [sd-forge-anima-pose](#credits); it was a separate extension before.
 
@@ -121,7 +121,7 @@ Covered, among other things:
 - the real `anima-preview-canny-v0.2.safetensors` (SHA256 matches the CivArchive page): a plain rank-32 LoRA with no control embedder; its 448 targets over 28 blocks all exist in Forge's Anima;
 - OpenPose: embedder ordering equals Forge's `PatchEmbed`, exactness at strength 0, odd sizes, the real adapter file (embedder is `Linear(64 → 2048)`, all 448 DiT and 60 `llm_adapter` LoRA targets exist in Forge's Anima).
 
-**Not covered:** a GPU run with real weights, the panel in a real browser, the real DWPose detector (its ONNX files were not downloaded), LoRA fade on a real on-the-fly LoRA model, the effect of the memory estimate on real VRAM use, and the **image quality** of using both adapters together.
+**Not covered by these tests** (CPU, random weights): image quality and real-weight GPU runs (those were done by hand, see the status note at the top), the panel in a real browser, the real DWPose detector (its ONNX files were not downloaded), LoRA fade on a real on-the-fly LoRA model, and the effect of the memory estimate on real VRAM use.
 
 Built against Forge Neo `neo` branch, commit `534e6ecce1039dbe5647e2c391b84a75aaa61d35` ("meta device", 2026-09-13). It was not checked against newer upstream commits.
 
@@ -132,7 +132,7 @@ Built against Forge Neo `neo` branch, commit `534e6ecce1039dbe5647e2c391b84a75aa
 - Its **license** is not stated on the page.
 - A user on the CivArchive page shared a Forge Neo patch and talks about selecting "the correct control method". Its content was not seen, so whether the LoRA needs a reference method other than "append along T, shared timestep" is unknown.
 - Whether switching the LoRA off after Control End leaves any residue on a real model (the strength is restored and tested on stand-ins, not on real weights).
-- Whether Canny and OpenPose give good images **together**. The code path is verified to equal "each control's own mechanism, side by side"; nothing is known about how the two LoRAs interact.
+- How Canny and OpenPose behave **together** beyond the maintainer's own GPU runs (where it works). Neither author trained or tested stacking, so how the two LoRAs interact at other weights and checkpoints is unknown. The code path is verified to equal "each control's own mechanism, side by side".
 
 ## Known issues
 

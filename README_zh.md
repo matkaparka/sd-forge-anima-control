@@ -4,7 +4,7 @@
 
 [English](README.md)
 
-> **状态：在 GPU 上做过初步测试。** 在 RTX 5070 Ti 笔记本、Forge Neo `neo 2.29`、底模 `indigoFurryMixAnima_v10` 上，两种控制都正确布防，没有报错，Canny 的参考让每一步慢了约 2.2 倍，直到 Control End 按设计把它撤掉。出图质量还没有在不同配置下评估过。不需要 GPU 就能验证的部分都验证过了（见下方"验证情况"），真机验证步骤在 [docs/verification.md](docs/verification.md)。欢迎反馈实际出图效果。
+> **状态：在 GPU 上做过初步测试。** 在 RTX 5070 Ti 笔记本、Forge Neo `neo 2.29`、底模 `indigoFurryMixAnima_v10` 上，两种控制都正确布防，没有报错，Canny 的参考让每一步慢了约 2.2 倍，直到 Control End 按设计把它撤掉。两种控制同时勾选也在 GPU 上跑过，可以正常使用。出图质量还没有在不同底模、LoRA 权重和设置下评估过。不需要 GPU 就能验证的部分都验证过了（见下方"验证情况"），真机验证步骤在 [docs/verification.md](docs/verification.md)。欢迎反馈实际出图效果。
 >
 > **提示，Canny 配线稿：** 和所有 Canny 控制一样，它期望的是从图片里提取出来的边缘。用黑白线稿做参考通常效果不好：Canny 会把每条线变成空心的双线轮廓，或者模型直接照抄线稿，结果没有上色。请用照片或带颜色的插画做参考，或者看下面的 *Invert Canny Map*。
 
@@ -19,7 +19,7 @@ Anima 没有真正的 ControlNet，两个适配器都是"控制 LoRA"，而且�
 | **Canny** | levzzz 的 [anima-preview-canny-v0.2](https://civitai.com/models/2443202) | 边缘图经 VAE 编码（`process_in`，采样器空间），作为**参考 latent** 沿 T 维拼在目标后面（和 Flux.2 的 ReferenceLatent 一样），参考和目标共用同一个 timestep（"current t"）。拼接由 Forge 自带的 `backend/nn/anima.py` 完成，本扩展负责提供 latent。ComfyUI PR [#13392](https://github.com/Comfy-Org/ComfyUI/pull/13392) 做的是同一件事（`dim=2` 上 `torch.cat`，参考过 `process_latent_in`）。 |
 | **OpenPose** | Claquasse 的 [Anima-Control-Pose](https://huggingface.co/Claquasse/Anima-Control-Pose) Preview-2 | 骨架图经 VAE 编码（原始 latent），再过适配器里训练好的线性 *control embedder*，**加到 DiT patch embedding 的输出上**，序列长度不变。同一个文件既是 LoRA 也是 embedder。 |
 
-**可以只勾一个，也可以两个同时勾。** 两条路径在机制上互不干扰：参考帧拼在目标帧后面，控制 token 只加到目标帧上。两个 LoRA 都会加进提示词，必须是两个不同的文件。两个分别训练的适配器**叠在一起**效果好不好，两位作者都没有说过，也还没有在 GPU 上测过；建议先把两个 LoRA 权重都调低一些。
+**可以只勾一个，也可以两个同时勾。** 两条路径在机制上互不干扰：参考帧拼在目标帧后面，控制 token 只加到目标帧上。两个 LoRA 都会加进提示词，必须是两个不同的文件。两位作者都没有把这两个适配器放在一起训练或测试过；两个同时使用已经在 GPU 上试过，可以正常使用。如果两者互相打架，把两个 LoRA 的权重调低一些。
 
 OpenPose 是从 [sd-forge-anima-pose](#致谢) 合并进来的，之前是独立扩展。
 
@@ -121,7 +121,7 @@ set ANIMA_POSE_FILE=path\to\anima_pose_preview2.safetensors
 - 真实的 `anima-preview-canny-v0.2.safetensors`（SHA256 与 CivArchive 页面一致）：是不带 control embedder 的 rank-32 纯 LoRA，覆盖 28 个 block 的 448 个目标在 Forge 的 Anima 里全部存在；
 - OpenPose：embedder 的排布和 Forge 的 `PatchEmbed` 一致、strength 0 时精确还原、奇数尺寸、真实适配器文件（embedder 是 `Linear(64 → 2048)`，448 个 DiT 和 60 个 `llm_adapter` 的 LoRA 目标在 Forge 的 Anima 里都存在）。
 
-**没覆盖到的：** 带真实权重的 GPU 运行、真实浏览器里的面板、真实的 DWPose 检测器（ONNX 文件没下载）、真实即时 LoRA 模型上的 LoRA 淡出、显存估算在真实显存占用上的效果，以及**两个适配器一起用时的出图质量**。
+**这些测试没有覆盖的**（CPU、随机权重）：出图质量和带真实权重的 GPU 运行（这部分是手动做的，见顶部的状态说明）、真实浏览器里的面板、真实的 DWPose 检测器（ONNX 文件没下载）、真实即时 LoRA 模型上的 LoRA 淡出、显存估算在真实显存占用上的效果。
 
 适配版本：Forge Neo `neo` 分支，提交 `534e6ecce1039dbe5647e2c391b84a75aaa61d35`（"meta device"，2026-09-13）。没有针对更新的上游提交检查过。
 
@@ -132,7 +132,7 @@ set ANIMA_POSE_FILE=path\to\anima_pose_preview2.safetensors
 - 它的**许可证**页面上没写。
 - CivArchive 页面上有人分享了 Forge Neo 的补丁，并提到要选"正确的 control method"。没看到补丁内容，所以不知道这个 LoRA 是否需要"沿 T 维拼接、共用 timestep"之外的参考方式。
 - Control End 之后关掉 LoRA，在真实模型上是否会留下残余影响（强度的还原在替身对象上测过，没在真实权重上测过）。
-- Canny 和 OpenPose **一起用**能不能出好图。代码路径已验证等于"两个控制各自的机制并排生效"，但两个 LoRA 之间会怎么相互影响，目前一无所知。
+- Canny 和 OpenPose **一起用**时，除了维护者自己在 GPU 上的使用（可正常使用）之外，表现如何。两位作者都没有为叠加训练或测试过，所以换底模、换权重之后两个 LoRA 会怎么相互影响是未知的。代码路径已验证等于"两个控制各自的机制并排生效"。
 
 ## 已知问题
 
